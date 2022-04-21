@@ -14,7 +14,7 @@ function Header() {
                 <i className="fas fa-shopping-cart"></i> Cart
               </Nav.Link>
               <Nav.Link href="/login">
-                <i class="fa-solid fa-user"></i> Login
+                <i className="fa-solid fa-user"></i> Login
               </Nav.Link>
             </Nav>
           </Navbar.Collapse>
