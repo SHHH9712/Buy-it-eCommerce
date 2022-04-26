@@ -1,8 +1,12 @@
 import React from "react";
-import { Alert } from "react-bootstrap";
+import Alert from "react-bootstrap/Alert";
 
 function Message({ variant, children }) {
-  return <Alert varient={variant}>{children}</Alert>;
+  return (
+    <Alert key={variant} variant={variant}>
+      {children}
+    </Alert>
+  );
 }
 
 export default Message;
