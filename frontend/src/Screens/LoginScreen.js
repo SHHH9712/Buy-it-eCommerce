@@ -12,10 +12,10 @@ function LoginScreen() {
   const [password, setPassword] = useState("");
 
   const dispatch = useDispatch();
-  let navigate = useNavigate();
+  const navigate = useNavigate();
 
   const [params] = useSearchParams();
-  const redirect = params.get("redirect") ? params.get("redirect") : "/";
+  const redirect = params.get("redirect") ? "/" + params.get("redirect") : "/";
 
   const userLogin = useSelector((state) => state.userLogin);
   const { userInfo, error, loading } = userLogin;
