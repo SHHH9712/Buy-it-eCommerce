@@ -1,15 +1,56 @@
+from http.client import PAYMENT_REQUIRED
+from math import perm
 from django.shortcuts import render
-from django.http import JsonResponse
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.response import Response
-from django.contrib.auth.models import User
-
-from base.serializer import ProductSerializer, UserSerializer, UserSerializerWithToken
-# Create your views here.
-
-from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
-from rest_framework_simplejwt.views import TokenObtainPairView
-
-from django.contrib.auth.hashers import make_password
+from base.serializer import OrderItemSerializer
 from rest_framework import status
+from base.models import Product, Order, OrderItem, ShippingAddress
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def addOrderItems(request):
+    user = request.user
+    data = request.data
+
+    orderItems = data['orderItems']
+
+    if orderItems and len(orderItems) == 0:
+        return Response({'detail':'NO ORDER ITEMS'}, status=status.HTTP_400_BAD_REQUEST)
+    else:
+        # (1) create order
+        order = Order.objects.create(
+            user            = user,
+            paymentMethod   = data['paymentMethod'],
+            taxPrice        = data['taxPrice'],
+            shippingPrice   = data['shippingPrice'],
+            totalPrice      = data['totalPrice']
+        )
+
+        # (2) create shipping address
+        shipping = ShippingAddress.objects.create(
+            order           = order,
+            address         = data['shippingAddress']['Address'],
+            city            = data['shippingAddress']['City'],
+            postalCode      = data['shippingAddress']['PostalCode'],
+            country         = data['shippingAddress']['Country'],
+        )
+        # (3) create order items and set order to orderItem relationship
+        for i in orderItems:
+            product = Product.objects.get(_id=i['product'])
+            item = OrderItem.objects.create(
+                product = product,
+                order   = order,
+                name    = product.name,
+                qty     = i['qty'],
+                price   = i['price'],
+                image   = product.image.url,
+            )
+            # (4) Update the stock
+            product.countInStock -= i['qty']
+            product.save()
+
+        serializer = OrderItemSerializer(order, many=False)
+
+    return Response(serializer.data)

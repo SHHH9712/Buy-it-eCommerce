@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Link, useSearchParams, useNavigate } from "react-router-dom";
+import { Link, useSearchParams, useNavigate, Navigate } from "react-router-dom";
 import {
   Button,
   Row,
@@ -12,23 +12,50 @@ import {
 import { useDispatch, useSelector } from "react-redux";
 import Message from "../components/Message";
 import CheckoutSteps from "../components/CheckoutSteps";
-import { saveShippingAddress } from "../actions/cartActions";
+import { createOrder } from "../actions/orderActions";
+import { ORDER_CREATE_RESET } from "../constants/orderConstants";
 
 function PlaceOrderScreen() {
+  const orderCreate = useSelector((state) => state.orderCreate);
+  const { order, error, success } = orderCreate;
+
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
+
   const cart = useSelector((state) => state.cart);
-  cart.itemPrice = cart.cartItems
+  cart.itemsPrice = cart.cartItems
     .reduce((acc, item) => acc + item.price * item.qty, 0)
     .toFixed(2);
-  cart.shippingPrice = (cart.itemPrice > 100 ? 0 : 10).toFixed(2);
-  cart.taxPrice = Number(cart.itemPrice * 0.082).toFixed(2);
+  cart.shippingPrice = (cart.itemsPrice > 100 ? 0 : 10).toFixed(2);
+  cart.taxPrice = Number(cart.itemsPrice * 0.082).toFixed(2);
   cart.totalPrice = (
-    Number(cart.itemPrice) +
+    Number(cart.itemsPrice) +
     Number(cart.shippingPrice) +
     Number(cart.taxPrice)
   ).toFixed(2);
 
+  useEffect(() => {
+    if (!cart.paymentMethod) {
+      navigate("/payment");
+    }
+    if (success) {
+      navigate(`/order/${order._id}`);
+      dispatch({ type: ORDER_CREATE_RESET });
+    }
+  }, [success]);
+
   const placeOrder = () => {
-    console.log("place order");
+    dispatch(
+      createOrder({
+        orderItems: cart.cartItems,
+        shippingAddress: cart.shippingAddress,
+        paymentMethod: cart.paymentMethod,
+        itemsPrice: cart.itemsPrice,
+        shippingPrice: cart.shippingPrice,
+        taxPrice: cart.taxPrice,
+        totalPrice: cart.totalPrice,
+      })
+    );
   };
   return (
     <div>
@@ -92,7 +119,7 @@ function PlaceOrderScreen() {
               <ListGroupItem>
                 <Row>
                   <Col>Items:</Col>
-                  <Col>${cart.itemPrice}</Col>
+                  <Col>${cart.itemsPrice}</Col>
                 </Row>
               </ListGroupItem>
               <ListGroupItem>
@@ -113,6 +140,11 @@ function PlaceOrderScreen() {
                   <Col>${cart.totalPrice}</Col>
                 </Row>
               </ListGroupItem>
+
+              <ListGroupItem>
+                {error && <Message variant="danger">{error}</Message>}
+              </ListGroupItem>
+
               <ListGroupItem className="d-grid gap-2">
                 <Button
                   type="button"
