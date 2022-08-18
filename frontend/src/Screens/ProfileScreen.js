@@ -38,7 +38,7 @@ function ProfileScreen() {
     if (!userInfo) {
       navigate("/login");
     } else {
-      if (!user || !user.name || success) {
+      if (!user || !user.name || success || userInfo._id !== user._id) {
         dispatch({ type: USER_UPDATE_PROFILE_RESET });
         dispatch(getUserDetails("profile"));
         dispatch(listMyOrders());
@@ -140,7 +140,7 @@ function ProfileScreen() {
             </thead>
 
             <tbody>
-              {orders.map((order) => (
+              {orders?.map((order) => (
                 <tr key={order._id}>
                   <td>{order._id}</td>
                   <td>{order.createdAt.substring(0, 10)}</td>

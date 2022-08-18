@@ -5,7 +5,7 @@ import { Table, Button } from "react-bootstrap";
 import { useDispatch, useSelector } from "react-redux";
 import Loader from "../components/Loader";
 import Message from "../components/Message";
-import { listUsers } from "../actions/userActions";
+import { listUsers, deleteUsers } from "../actions/userActions";
 
 function UserListScreen() {
   const dispatch = useDispatch();
@@ -17,15 +17,22 @@ function UserListScreen() {
   const userLogin = useSelector((state) => state.userLogin);
   const { userInfo } = userLogin;
 
+  const userDelete = useSelector((state) => state.userLogin);
+  const { success: successDelete } = userLogin;
+
   useEffect(() => {
     if (userInfo && userInfo.isAdmin) {
       dispatch(listUsers());
     } else {
       navigate("/login");
     }
-  }, [dispatch]);
+  }, [dispatch, successDelete]);
 
-  const deleteHandler = (id) => console.log("DELETE USER", id);
+  const deleteHandler = (id) => {
+    if (window.confirm("Confirm deletion?")) {
+      dispatch(deleteUsers(id));
+    }
+  };
 
   return (
     <div>
@@ -37,15 +44,17 @@ function UserListScreen() {
       ) : (
         <Table striped bordered hover responsive className="table-sm">
           <thead>
-            <th>ID</th>
-            <th>NAME</th>
-            <th>EMAIL</th>
-            <th>ADMIN</th>
-            <th></th>
+            <tr>
+              <th>{"ID"}</th>
+              <th>{"NAME"}</th>
+              <th>{"EMAIL"}</th>
+              <th>{"ADMIN"}</th>
+              <th>{""}</th>
+            </tr>
           </thead>
 
           <tbody>
-            {users.map((user) => (
+            {users?.map((user) => (
               <tr key={user._id}>
                 <td>{user._id}</td>
                 <td>{user.name}</td>
@@ -54,11 +63,11 @@ function UserListScreen() {
                   {user.isAdmin ? (
                     <i className="fas fa-check" style={{ color: "green" }}></i>
                   ) : (
-                    <i className="fas fa-check" style={{ color: "red" }}></i>
+                    <i className="fas fa-xmark" style={{ color: "red" }}></i>
                   )}
                 </td>
                 <td>
-                  <LinkContainer to={`/admin/user/${user._id}`}>
+                  <LinkContainer to={`/admin/user/${user._id}/edit`}>
                     <Button variant="light" className="btn-sm">
                       Edit
                     </Button>

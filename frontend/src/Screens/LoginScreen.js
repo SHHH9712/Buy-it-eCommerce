@@ -15,7 +15,9 @@ function LoginScreen() {
   const navigate = useNavigate();
 
   const [params] = useSearchParams();
-  const redirect = params.get("redirect") ? "/" + params.get("redirect") : "/";
+  const redirect = params.get("redirect")
+    ? "/" + params.get("redirect")
+    : "/profile";
 
   const userLogin = useSelector((state) => state.userLogin);
   const { userInfo, error, loading } = userLogin;
